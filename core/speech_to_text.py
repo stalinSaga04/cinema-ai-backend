@@ -5,14 +5,20 @@ logger = get_logger(__name__)
 
 class SpeechToText:
     def __init__(self, model_size: str = "base"):
-        logger.info(f"Loading Whisper model: {model_size}")
-        self.model = whisper.load_model(model_size)
+        self.model_size = model_size
+        self.model = None
+
+    def _load_model(self):
+        if self.model is None:
+            logger.info(f"Loading Whisper model: {self.model_size}")
+            self.model = whisper.load_model(self.model_size)
 
     def transcribe(self, audio_path: str) -> str:
         """
         Transcribe audio file to text.
         Returns the transcription text.
         """
+        self._load_model()
         logger.info(f"Starting transcription for {audio_path}")
         try:
             result = self.model.transcribe(audio_path)

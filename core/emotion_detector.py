@@ -1,4 +1,3 @@
-from deepface import DeepFace
 import os
 import glob
 from .utils import get_logger
@@ -14,6 +13,9 @@ class EmotionDetector:
         Analyze emotions in a directory of frames.
         Returns a list of emotion data.
         """
+        # Lazy import to avoid slow startup
+        from deepface import DeepFace
+        
         logger.info(f"Starting emotion analysis for frames in {frames_dir}")
         
         frame_paths = sorted(glob.glob(os.path.join(frames_dir, "*.jpg")))
