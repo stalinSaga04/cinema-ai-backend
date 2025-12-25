@@ -18,6 +18,14 @@ class AudioExtractor:
         
         try:
             video = VideoFileClip(video_path)
+            
+            # Check if video has audio
+            if video.audio is None:
+                logger.warning(f"Video {video_path} has no audio track")
+                video.close()
+                # Return empty audio file path or None
+                return None
+            
             filename = os.path.basename(video_path)
             audio_filename = os.path.splitext(filename)[0] + ".mp3"
             output_path = os.path.join(self.output_dir, audio_filename)

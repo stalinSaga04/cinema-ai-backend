@@ -51,7 +51,11 @@ class BrainController:
             audio_path = self.audio_extractor.extract_audio(video_path)
             
             self.processing_status[video_id]["status"] = "transcribing"
-            transcript = self.speech_to_text.transcribe(audio_path)
+            if audio_path:
+                transcript = self.speech_to_text.transcribe(audio_path)
+            else:
+                logger.info("No audio track found, skipping transcription")
+                transcript = ""
             
             # 2. Extract Frames
             self.processing_status[video_id]["status"] = "extracting_frames"
