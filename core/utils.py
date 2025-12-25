@@ -31,3 +31,26 @@ def save_upload_file(upload_file, destination: str):
         import shutil
         shutil.copyfileobj(upload_file.file, buffer)
     logger.info(f"Saved file to {destination}")
+
+def frame_to_timestamp(frame_number: int, fps: float = 30.0) -> str:
+    """Convert frame number to timestamp format HH:MM:SS"""
+    total_seconds = frame_number / fps
+    hours = int(total_seconds // 3600)
+    minutes = int((total_seconds % 3600) // 60)
+    seconds = int(total_seconds % 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+def get_video_fps(video_path: str) -> float:
+    """Get FPS of video file"""
+    import cv2
+    video = cv2.VideoCapture(video_path)
+    fps = video.get(cv2.CAP_PROP_FPS)
+    video.release()
+    return fps if fps > 0 else 30.0
+
+def sample_frames_indices(total_frames: int, sample_count: int = 10) -> list:
+    """Get evenly distributed frame indices for sampling"""
+    if total_frames <= sample_count:
+        return list(range(total_frames))
+    step = total_frames // sample_count
+    return [i * step for i in range(sample_count)]

@@ -42,6 +42,10 @@ class BrainController:
         try:
             logger.info(f"Processing video {video_id}")
             
+            # Get video FPS for timestamp conversion
+            from .utils import get_video_fps, frame_to_timestamp, sample_frames_indices
+            fps = get_video_fps(video_path)
+            
             # 1. Extract Audio & Transcribe
             self.processing_status[video_id]["status"] = "extracting_audio"
             audio_path = self.audio_extractor.extract_audio(video_path)
@@ -51,31 +55,59 @@ class BrainController:
             
             # 2. Extract Frames
             self.processing_status[video_id]["status"] = "extracting_frames"
-            # Create a specific directory for this video's frames to avoid collisions
             video_frames_dir = os.path.join(self.outputs_dir, "frames", video_id)
             ensure_directory(video_frames_dir)
-            # Temporarily override output dir for this call
             original_frames_dir = self.frame_extractor.output_dir
             self.frame_extractor.output_dir = video_frames_dir
             frame_count = self.frame_extractor.extract_frames(video_path)
-            self.frame_extractor.output_dir = original_frames_dir # Restore
+            self.frame_extractor.output_dir = original_frames_dir
             
             # 3. Detect Scenes
             self.processing_status[video_id]["status"] = "detecting_scenes"
-            scenes = self.scene_detector.detect_scenes(video_path)
+            scenes_raw = self.scene_detector.detect_scenes(video_path)
             
-            # 4. Detect Emotions
+            # Convert scenes to PRD format with timestamps
+            scenes = []
+            for scene in scenes_raw:
+                start_frame = scene.get("start_frame", 0)
+                end_frame = scene.get("end_frame", 0)
+                scenes.append({
+                    "start": frame_to_timestamp(start_frame, fps),
+                    "end": frame_to_timestamp(end_frame, fps)
+                })
+            
+            # 4. Detect Emotions & Characters
             self.processing_status[video_id]["status"] = "detecting_emotions"
-            emotions = self.emotion_detector.analyze_emotions(video_frames_dir)
+            emotions_raw, characters = self.emotion_detector.analyze_emotions(video_frames_dir)
             
-            # 5. Compile Result
+            # Convert emotions to PRD format with timestamps
+            emotion_map = []
+            for emotion in emotions_raw:
+                # Extract frame number from filename (e.g., "frame_0045.jpg" -> 45)
+                frame_filename = emotion.get("frame", "frame_0000.jpg")
+                try:
+                    frame_num = int(frame_filename.split("_")[1].split(".")[0])
+                    emotion_map.append({
+                        "time": frame_to_timestamp(frame_num, fps),
+                        "emotion": emotion.get("emotion"),
+                        "character_id": emotion.get("character_id")
+                    })
+                except:
+                    pass  # Skip if frame number can't be extracted
+            
+            # 5. Get frame samples (save only key frames)
+            import glob
+            all_frames = sorted(glob.glob(os.path.join(video_frames_dir, "*.jpg")))
+            sample_indices = sample_frames_indices(len(all_frames), sample_count=10)
+            frame_samples = [os.path.basename(all_frames[i]) for i in sample_indices if i < len(all_frames)]
+            
+            # 6. Compile Result in PRD format
             result = {
-                "id": video_id,
-                "file": os.path.basename(video_path),
-                "frame_count": frame_count,
                 "transcript": transcript,
                 "scenes": scenes,
-                "emotions": emotions
+                "emotion_map": emotion_map,
+                "characters": characters,
+                "frame_samples": frame_samples
             }
             
             # Save JSON
