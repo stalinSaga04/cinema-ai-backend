@@ -2,7 +2,7 @@ import os
 import json
 import threading
 from typing import Dict, Any
-from .utils import get_logger, ensure_directory
+from .utils import get_logger, ensure_directory, generate_unique_id
 from .frame_extractor import FrameExtractor
 from .audio_extractor import AudioExtractor
 from .speech_to_text import SpeechToText
@@ -12,24 +12,32 @@ from .retake_matcher import RetakeMatcher
 
 logger = get_logger(__name__)
 
+from .edl_generator import EDLGenerator
+from .video_renderer import VideoRenderer
+
 class BrainController:
-    def __init__(self, base_dir: str = "."):
+    def __init__(self, base_dir: str):
         self.base_dir = base_dir
         self.uploads_dir = os.path.join(base_dir, "uploads")
         self.outputs_dir = os.path.join(base_dir, "outputs")
         
+        # Ensure directories exist
         ensure_directory(self.uploads_dir)
         ensure_directory(self.outputs_dir)
         
-        self.processing_status: Dict[str, Dict[str, Any]] = {}
-        
         # Initialize modules
-        self.frame_extractor = FrameExtractor(output_dir=os.path.join(self.outputs_dir, "frames"))
-        self.audio_extractor = AudioExtractor(output_dir=os.path.join(self.outputs_dir, "audio"))
-        self.speech_to_text = SpeechToText()
-        self.scene_detector = SceneDetector()
-        self.emotion_detector = EmotionDetector()
+        self.frame_extractor = FrameExtractor(os.path.join(self.outputs_dir, "frames"))
+        self.audio_extractor = AudioExtractor(os.path.join(self.outputs_dir, "audio"))
+        self.speech_to_text = SpeechToText() # Lazy loaded
+        self.scene_detector = SceneDetector() # Lazy loaded
+        self.emotion_detector = EmotionDetector() # Lazy loaded
         self.retake_matcher = RetakeMatcher()
+        self.edl_generator = EDLGenerator()
+        self.video_renderer = VideoRenderer(os.path.join(self.outputs_dir, "renders"), self.uploads_dir)
+        
+        # In-memory storage (Replace with DB in Phase 4)
+        self.processing_status = {}
+        self.results = {}
 
     def start_processing(self, video_id: str, video_path: str):
         """
@@ -158,3 +166,41 @@ class BrainController:
             return {"error": "No valid processed videos found to compare."}
             
         return self.retake_matcher.compare_takes(takes_data, reference_script)
+
+    def render_project(self, video_ids: list, reference_script: str = None) -> dict:
+        """
+        Generate a final video from a list of takes.
+        1. Compare takes to find the best ones.
+        2. Generate an EDL (Edit Decision List).
+        3. Render the final video.
+        """
+        logger.info(f"Starting render project for {len(video_ids)} videos")
+        
+        # Step 1: Compare
+        comparison_result = self.compare_takes(video_ids, reference_script)
+        if "error" in comparison_result:
+            return comparison_result
+            
+        # Step 2: Generate EDL
+        edl = self.edl_generator.generate_edl(comparison_result)
+        if not edl:
+            return {"error": "Failed to generate EDL (No valid clips found)"}
+            
+        # Step 3: Render
+        try:
+            output_filename = f"render_{generate_unique_id()}.mp4"
+            render_path = self.video_renderer.render_video(edl, output_filename)
+            
+            if not render_path:
+                return {"error": "Rendering failed (VideoRenderer returned None)"}
+                
+            return {
+                "status": "success",
+                "render_path": render_path,
+                "download_url": f"/download/{output_filename}", # We need to serve this
+                "edl": edl,
+                "comparison": comparison_result
+            }
+        except Exception as e:
+            logger.error(f"Render project failed: {e}")
+            return {"error": f"Render failed: {str(e)}"}

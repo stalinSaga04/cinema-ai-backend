@@ -79,6 +79,43 @@ async def compare_videos(request: CompareRequest):
         
     return result
 
+class RenderRequest(BaseModel):
+    video_ids: list[str]
+    reference_script: str = None
+
+@app.post("/render")
+async def render_video(request: RenderRequest):
+    """
+    Render a final video from the best takes.
+    """
+    if not request.video_ids:
+        raise HTTPException(status_code=400, detail="No video IDs provided")
+        
+    result = brain.render_project(request.video_ids, request.reference_script)
+    
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+        
+    return result
+
+from fastapi.responses import FileResponse
+
+@app.get("/download/{filename}")
+async def download_file(filename: str):
+    """
+    Download a rendered video file.
+    """
+    # Security check: prevent directory traversal
+    if ".." in filename or "/" in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+        
+    file_path = os.path.join(brain.outputs_dir, "renders", filename)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+        
+    return FileResponse(file_path, media_type="video/mp4", filename=filename)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
