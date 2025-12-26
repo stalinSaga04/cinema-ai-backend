@@ -70,14 +70,16 @@ class BrainController:
             self.processing_status[video_id]["status"] = "detecting_scenes"
             scenes_raw = self.scene_detector.detect_scenes(video_path)
             
-            # Convert scenes to PRD format with timestamps
+            # Convert scenes to PRD format with timestamps in HH:MM:SS
             scenes = []
             for scene in scenes_raw:
-                start_frame = scene.get("start_frame", 0)
-                end_frame = scene.get("end_frame", 0)
+                # Scene detector now returns: start_seconds, end_seconds, start_timecode, end_timecode
+                # We'll use start_seconds/end_seconds and convert to HH:MM:SS
+                start_seconds = scene.get("start_seconds", 0)
+                end_seconds = scene.get("end_seconds", 0)
                 scenes.append({
-                    "start": frame_to_timestamp(start_frame, fps),
-                    "end": frame_to_timestamp(end_frame, fps)
+                    "start": frame_to_timestamp(int(start_seconds * fps), fps),
+                    "end": frame_to_timestamp(int(end_seconds * fps), fps)
                 })
             
             # 4. Detect Emotions & Characters

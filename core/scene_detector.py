@@ -11,7 +11,7 @@ class SceneDetector:
     def detect_scenes(self, video_path: str):
         """
         Detect scenes in a video.
-        Returns a list of tuples (start_time, end_time).
+        Returns a list of dicts with start/end timestamps in HH:MM:SS format.
         """
         logger.info(f"Starting scene detection for {video_path}")
         
@@ -29,9 +29,14 @@ class SceneDetector:
         scenes = []
         for scene in scene_list:
             start, end = scene
+            # Convert seconds to HH:MM:SS format
+            start_seconds = start.get_seconds()
+            end_seconds = end.get_seconds()
             scenes.append({
-                "start": start.get_seconds(),
-                "end": end.get_seconds()
+                "start_seconds": start_seconds,
+                "end_seconds": end_seconds,
+                "start_timecode": start.get_timecode(),
+                "end_timecode": end.get_timecode()
             })
             
         logger.info(f"Detected {len(scenes)} scenes")

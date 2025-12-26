@@ -11,3 +11,4 @@ scenedetect
 numpy
 pydantic
 boto3
+tf-keras

@@ -1,4 +1,8 @@
-from moviepy import VideoFileClip
+try:
+    from moviepy.editor import VideoFileClip
+except ImportError:
+    # Fallback for older MoviePy versions
+    from moviepy import VideoFileClip
 import os
 from .utils import get_logger, ensure_directory
 
