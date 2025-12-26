@@ -8,6 +8,7 @@ from .audio_extractor import AudioExtractor
 from .speech_to_text import SpeechToText
 from .scene_detector import SceneDetector
 from .emotion_detector import EmotionDetector
+from .retake_matcher import RetakeMatcher
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,7 @@ class BrainController:
         self.speech_to_text = SpeechToText()
         self.scene_detector = SceneDetector()
         self.emotion_detector = EmotionDetector()
+        self.retake_matcher = RetakeMatcher()
 
     def start_processing(self, video_id: str, video_path: str):
         """
@@ -137,3 +139,22 @@ class BrainController:
             with open(status["result_path"], "r") as f:
                 return json.load(f)
         return None
+
+    def compare_takes(self, video_ids: list, reference_script: str = None):
+        """
+        Compare multiple processed videos.
+        """
+        takes_data = []
+        for vid in video_ids:
+            result = self.get_result(vid)
+            if result:
+                # Add video_id to the result dict for identification if not present
+                result["video_id"] = vid
+                takes_data.append(result)
+            else:
+                logger.warning(f"Video ID {vid} not found or not processed.")
+        
+        if not takes_data:
+            return {"error": "No valid processed videos found to compare."}
+            
+        return self.retake_matcher.compare_takes(takes_data, reference_script)

@@ -59,6 +59,25 @@ async def get_result(video_id: str):
             raise HTTPException(status_code=400, detail="Processing not completed yet")
     return result
 
+class CompareRequest(BaseModel):
+    video_ids: list[str]
+    reference_script: str = None
+
+@app.post("/compare")
+async def compare_videos(request: CompareRequest):
+    """
+    Compare multiple processed videos to find the best take.
+    """
+    if not request.video_ids:
+        raise HTTPException(status_code=400, detail="No video IDs provided")
+        
+    result = brain.compare_takes(request.video_ids, request.reference_script)
+    
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+        
+    return result
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
