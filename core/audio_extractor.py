@@ -1,8 +1,3 @@
-try:
-    from moviepy.editor import VideoFileClip
-except ImportError:
-    # Fallback for older MoviePy versions
-    from moviepy import VideoFileClip
 import os
 from .utils import get_logger, ensure_directory
 
@@ -18,6 +13,12 @@ class AudioExtractor:
         Extract audio from video and save as MP3.
         Returns the path to the extracted audio file.
         """
+        try:
+            from moviepy.editor import VideoFileClip
+        except ImportError:
+            # Fallback for older MoviePy versions
+            from moviepy import VideoFileClip
+
         logger.info(f"Starting audio extraction for {video_path}")
         
         try:

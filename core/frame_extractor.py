@@ -1,4 +1,3 @@
-import cv2
 import os
 from .utils import get_logger, ensure_directory
 
@@ -14,6 +13,7 @@ class FrameExtractor:
         Extract frames from video at a given interval (in seconds).
         Returns the number of frames extracted.
         """
+        import cv2
         logger.info(f"Starting frame extraction for {video_path}")
         
         cap = cv2.VideoCapture(video_path)

@@ -1,4 +1,3 @@
-import whisper
 from .utils import get_logger
 
 logger = get_logger(__name__)
@@ -10,6 +9,7 @@ class SpeechToText:
 
     def _load_model(self):
         if self.model is None:
+            import whisper
             logger.info(f"Loading Whisper model: {self.model_size}")
             self.model = whisper.load_model(self.model_size)
 

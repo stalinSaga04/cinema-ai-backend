@@ -1,5 +1,3 @@
-from scenedetect import VideoManager, SceneManager
-from scenedetect.detectors import ContentDetector
 from .utils import get_logger
 
 logger = get_logger(__name__)
@@ -13,6 +11,9 @@ class SceneDetector:
         Detect scenes in a video.
         Returns a list of dicts with start/end timestamps in HH:MM:SS format.
         """
+        from scenedetect import VideoManager, SceneManager
+        from scenedetect.detectors import ContentDetector
+
         logger.info(f"Starting scene detection for {video_path}")
         
         video_manager = VideoManager([video_path])
