@@ -6,9 +6,9 @@ ffmpeg-python
 moviepy
 openai-whisper
 torch
-deepface
+# deepface (Commented out for Render Free Tier - 512MB RAM limit)
 scenedetect
 numpy
 pydantic
 boto3
-tf-keras
+# tf-keras (Commented out for Render Free Tier)
