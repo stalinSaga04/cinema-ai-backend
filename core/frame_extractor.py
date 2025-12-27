@@ -8,13 +8,14 @@ class FrameExtractor:
         self.output_dir = output_dir
         ensure_directory(output_dir)
 
-    def extract_frames(self, video_path: str, interval: int = 1) -> int:
+    def extract_frames(self, video_path: str, interval: int = 1, output_dir: str = None) -> int:
         """
         Extract frames from video at a given interval (in seconds).
         Returns the number of frames extracted.
         """
         import cv2
-        logger.info(f"Starting frame extraction for {video_path}")
+        target_dir = output_dir or self.output_dir
+        logger.info(f"Starting frame extraction for {video_path} to {target_dir}")
         
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
@@ -33,12 +34,12 @@ class FrameExtractor:
                 break
             
             if count % frame_interval == 0:
-                frame_name = os.path.join(self.output_dir, f"frame_{saved_count:04d}.jpg")
+                frame_name = os.path.join(target_dir, f"frame_{saved_count:04d}.jpg")
                 cv2.imwrite(frame_name, frame)
                 saved_count += 1
             
             count += 1
             
         cap.release()
-        logger.info(f"Extracted {saved_count} frames to {self.output_dir}")
+        logger.info(f"Extracted {saved_count} frames to {target_dir}")
         return saved_count

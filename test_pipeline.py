@@ -37,7 +37,7 @@ def test_health():
     """Test 1: Health check"""
     print_step("Testing health endpoint...")
     try:
-        response = requests.get(f"{API_URL}/health", timeout=10)
+        response = requests.get(f"{API_URL}/health", timeout=30)
         if response.status_code == 200:
             print_success(f"Health check passed: {response.json()}")
             return True

@@ -54,3 +54,13 @@ def sample_frames_indices(total_frames: int, sample_count: int = 10) -> list:
         return list(range(total_frames))
     step = total_frames // sample_count
     return [i * step for i in range(sample_count)]
+
+def get_video_duration(video_path: str) -> float:
+    """Get duration of video file in seconds"""
+    import cv2
+    video = cv2.VideoCapture(video_path)
+    fps = video.get(cv2.CAP_PROP_FPS)
+    frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration = frame_count / fps if fps > 0 else 0.0
+    video.release()
+    return duration

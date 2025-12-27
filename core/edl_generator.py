@@ -9,54 +9,42 @@ class EDLGenerator:
     def generate_edl(self, comparison_result: dict) -> list:
         """
         Generate an Edit Decision List (EDL) from comparison results.
-        
-        Args:
-            comparison_result: The output from RetakeMatcher.compare_takes()
-            
-        Returns:
-            List of dicts representing clips to stitch:
-            [
-                {
-                    "video_id": "uuid",
-                    "start_time": 0.0,
-                    "end_time": 10.5,
-                    "source_path": "/path/to/video.mp4" 
-                },
-                ...
-            ]
+        PRD 9. Video Editing Rules - Deterministic cutting.
         """
         logger.info("Generating EDL from comparison result")
         
         edl = []
-        
-        # 1. Identify the Best Take
-        # For MVP, we simply take the "best_take_id" and use it for the whole duration.
-        # In the future, we will stitch scene-by-scene.
         
         best_take_id = comparison_result.get("best_take_id")
         if not best_take_id:
             logger.error("No best_take_id found in comparison result")
             return []
             
-        # Find the ranking details for the best take to get metadata if needed
+        # Get full data for the best take to access scenes and emotions
         best_take_data = next((r for r in comparison_result.get("rankings", []) if r["video_id"] == best_take_id), None)
         
-        if best_take_data:
-            # We need the source path. 
-            # Note: The comparison result currently doesn't have the full path, 
-            # so the caller (BrainController) might need to enrich this or we pass it in.
-            # For now, we will just return the video_id and let the renderer resolve the path.
-            
-            # TODO: Get actual duration from metadata. For now, we assume full length.
-            # We will rely on the renderer to know the duration or we should pass it.
-            
-            clip_entry = {
-                "video_id": best_take_id,
-                "start_time": 0.0,
-                "end_time": None, # None means "until end"
-                "type": "video"
-            }
-            edl.append(clip_entry)
+        # In a real system, we'd pass the full analysis result here.
+        # For MVP, we'll assume the comparison_result has been enriched or we fetch it.
+        # Since we don't have the full scenes list here, we'll use a simplified version.
+        
+        # For MVP: 
+        # 1. Start with the best A-roll take.
+        # 2. Use the whole take, but mark it with metadata for the renderer.
+        
+        # In a more advanced MVP, we'd iterate through scenes:
+        # for scene in best_take_scenes:
+        #     duration = scene['end'] - scene['start']
+        #     if scene['motion_score'] > 10: duration = min(duration, 3.0)
+        #     ...
+        
+        edl.append({
+            "video_id": best_take_id,
+            "start_time": 0.0,
+            "end_time": None,
+            "type": "a-roll",
+            "motion_score": best_take_data.get("metrics", {}).get("motion_score", 5.0),
+            "has_face": best_take_data.get("metrics", {}).get("emotion_intensity", 0) > 0
+        })
             
         logger.info(f"Generated EDL with {len(edl)} clips")
         return edl

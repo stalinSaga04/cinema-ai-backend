@@ -6,3 +6,17 @@ venv/
 outputs/
 uploads/
 .DS_Store
+
+# Logs and temporary files
+*.log
+*.zip
+*.json
+*.mp4
+debug_*.py
+create_test_video*.py
+retry_compare.py
+verify_supabase.py
+view_results.py
+monitor.py
+test_output.log
+downloaded_render.mp4

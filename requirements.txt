@@ -11,4 +11,5 @@ scenedetect
 numpy
 pydantic
 boto3
+supabase
 # tf-keras (Commented out for Render Free Tier)
