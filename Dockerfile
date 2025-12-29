@@ -19,17 +19,17 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first (for better layer caching)
+# Copy requirements and install
 COPY requirements.txt .
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY . .
-
-# Pre-download AI models during build (critical for fast startup)
+# Copy only the download script first to cache models
+COPY scripts/download_models.py scripts/
 RUN python scripts/download_models.py || echo "Model download failed, will retry at runtime"
+
+# Copy the rest of the application code
+COPY . .
 
 # Create necessary directories
 RUN mkdir -p uploads outputs/frames outputs/audio
