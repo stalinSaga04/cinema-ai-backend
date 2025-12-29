@@ -181,19 +181,20 @@ class VideoRenderer:
             vf_filters = "scale=-1:720,unsharp=3:3:1.5"
             if not is_paid:
                 # Check if drawtext is available
-                import subprocess
-                try:
-                    # More robust check: look for ' drawtext ' in filters list
-                    result = subprocess.run(["ffmpeg", "-filters"], capture_output=True, text=True)
-                    filters_list = result.stdout.splitlines()
-                    has_drawtext = any(" drawtext " in line for line in filters_list)
-                    
-                    if has_drawtext:
-                        vf_filters += ",drawtext=text='Cinema AI':x=W-tw-10:y=H-th-10:fontsize=24:fontcolor=white@0.5"
-                    else:
-                        logger.warning("FFmpeg 'drawtext' filter not found in filters list. Skipping watermark.")
-                except Exception as e:
-                    logger.warning(f"Could not check FFmpeg filters: {e}")
+                # import subprocess
+                # try:
+                #     # More robust check: look for ' drawtext ' in filters list
+                #     result = subprocess.run(["ffmpeg", "-filters"], capture_output=True, text=True)
+                #     filters_list = result.stdout.splitlines()
+                #     has_drawtext = any(" drawtext " in line for line in filters_list)
+                #     
+                #     if has_drawtext:
+                #         vf_filters += ",drawtext=text='Cinema AI':x=W-tw-10:y=H-th-10:fontsize=24:fontcolor=white@0.5"
+                #     else:
+                #         logger.warning("FFmpeg 'drawtext' filter not found in filters list. Skipping watermark.")
+                # except Exception as e:
+                #     logger.warning(f"Could not check FFmpeg filters: {e}")
+                pass
 
             ffmpeg_params = ["-vf", vf_filters]
             if final_video.audio:
