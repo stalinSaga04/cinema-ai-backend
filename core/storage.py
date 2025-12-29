@@ -34,3 +34,15 @@ class Storage:
         except Exception as e:
             logger.error(f"Failed to get public URL: {e}")
             return None
+
+    def download_file(self, bucket: str, storage_path: str, local_path: str):
+        if not self.client: return False
+        try:
+            res = self.client.storage.from_(bucket).download(storage_path)
+            with open(local_path, 'wb') as f:
+                f.write(res)
+            logger.info(f"File downloaded from {bucket}/{storage_path} to {local_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to download file: {e}")
+            return False

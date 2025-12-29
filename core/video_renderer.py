@@ -48,8 +48,19 @@ class VideoRenderer:
                         break
                 
                 if not video_path:
-                    logger.warning(f"Could not find source video for ID {video_id}")
-                    continue
+                    logger.info(f"Clip {video_id} not found locally. Attempting to download from Supabase...")
+                    # Try to download from Supabase Storage
+                    # We assume the file is in 'videos' bucket under 'uploads/{video_id}.mp4'
+                    # In a real app, we'd store the extension in the DB.
+                    local_path = os.path.join(self.uploads_dir, f"{video_id}.mp4")
+                    
+                    from .storage import Storage
+                    storage = Storage()
+                    if storage.download_file("videos", f"uploads/{video_id}.mp4", local_path):
+                        video_path = local_path
+                    else:
+                        logger.warning(f"Could not find or download source video for ID {video_id}")
+                        continue
                     
                 logger.info(f"Loading clip from {video_path}")
                 clip = VideoFileClip(video_path)
