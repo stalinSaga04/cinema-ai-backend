@@ -350,9 +350,9 @@ class BrainController:
             
         return self.retake_matcher.compare_takes(takes_data, reference_script)
 
-    def render_project(self, project_id: str, reference_script: str = None, bg_music_path: str = None):
+    def render_project(self, project_id: str, reference_script: str = None, bg_music_path: str = None, is_draft: bool = False):
         """PRD Step 7: Approval & Final Render - Enqueue job."""
-        logger.info(f"Enqueuing final render for project {project_id}")
+        logger.info(f"Enqueuing {'draft ' if is_draft else 'final '}render for project {project_id}")
         
         video_ids = self.db.get_project_clips(project_id)
         if not video_ids:
@@ -368,7 +368,7 @@ class BrainController:
             "reference_script": reference_script,
             "bg_music_path": bg_music_path,
             "is_paid": is_paid,
-            "is_draft": False
+            "is_draft": is_draft
         })
         
         return {"job_id": job_id, "status": "RENDERING"}

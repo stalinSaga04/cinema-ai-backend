@@ -184,6 +184,7 @@ async def approve_draft(project_id: str, request: ApprovalRequest, user=Depends(
 class RenderRequest(BaseModel):
     reference_script: str = None
     bg_music_path: str = None
+    is_draft: bool = False
 
 @app.post("/projects/{project_id}/render")
 async def render_video(project_id: str, request: RenderRequest, user=Depends(get_current_user)):
@@ -191,11 +192,11 @@ async def render_video(project_id: str, request: RenderRequest, user=Depends(get
     if not brain.check_role(user.id, ["CREATOR"]):
         raise HTTPException(status_code=403, detail="Only Creators can trigger render")
     
-    # PRD-MONETIZATION: Check if project is paid
-    if not brain.db.is_project_paid(project_id):
+    # PRD-MONETIZATION: Check if project is paid (skip for drafts)
+    if not request.is_draft and not brain.db.is_project_paid(project_id):
         raise HTTPException(status_code=402, detail="Payment required for final export ($7)")
     
-    result = brain.render_project(project_id, request.reference_script, request.bg_music_path)
+    result = brain.render_project(project_id, request.reference_script, request.bg_music_path, is_draft=request.is_draft)
     
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
