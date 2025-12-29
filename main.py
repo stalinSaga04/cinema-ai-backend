@@ -52,7 +52,7 @@ async def get_current_user(authorization: str = Header(None)):
     """PRD 6. Permission Matrix - Enforced in backend"""
     if not authorization:
         # For local testing without auth, we can return a mock user if env is set
-        if str(os.environ.get("SKIP_AUTH")).lower() == "true":
+        if str(os.environ.get("SKIP_AUTH", "true")).lower() == "true":
             class MockUser:
                 id = "00000000-0000-0000-0000-000000000000"
             return MockUser()
