@@ -180,10 +180,11 @@ class VideoRenderer:
                 except Exception as e:
                     logger.warning(f"Could not check FFmpeg filters: {e}")
 
-            ffmpeg_params = [
-                "-vf", vf_filters,
-                "-af", "loudnorm"
-            ]
+            ffmpeg_params = ["-vf", vf_filters]
+            if final_video.audio:
+                ffmpeg_params.extend(["-af", "loudnorm"])
+            else:
+                logger.info("No audio track detected, skipping 'loudnorm' filter.")
             
             final_video.write_videofile(
                 output_path, 
