@@ -33,6 +33,7 @@ brain = BrainController(base_dir=".")
 @app.on_event("startup")
 async def startup_event():
     """Start the background worker thread for MVP convenience."""
+    logger.info(f"SKIP_AUTH status: {os.environ.get('SKIP_AUTH')}")
     if os.environ.get("RUN_INTERNAL_WORKER", "true").lower() == "true":
         logger.info("Starting background worker thread (MVP Mode)...")
         worker_thread = threading.Thread(target=run_worker, daemon=True)
@@ -51,7 +52,7 @@ async def get_current_user(authorization: str = Header(None)):
     """PRD 6. Permission Matrix - Enforced in backend"""
     if not authorization:
         # For local testing without auth, we can return a mock user if env is set
-        if os.environ.get("SKIP_AUTH") == "true":
+        if str(os.environ.get("SKIP_AUTH")).lower() == "true":
             class MockUser:
                 id = "00000000-0000-0000-0000-000000000000"
             return MockUser()
