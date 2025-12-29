@@ -6,6 +6,8 @@ FROM python:3.10-slim
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    libfreetype6-dev \
+    fontconfig \
     build-essential \
     wget \
     git \
