@@ -14,7 +14,11 @@ app = FastAPI(title="Cinema AI Brain V1")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://cinema-ai-frontend-eight.vercel.app",
+        "https://cinema-ai-frontend.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,7 +32,8 @@ if not os.environ.get("SUPABASE_URL"):
 if not os.environ.get("SUPABASE_KEY"):
     os.environ["SUPABASE_KEY"] = "sb_publishable_WhyhXpfQ0ZJuZsqJYrJtLw_48Crs5RE"
 
-brain = BrainController(base_dir=".")
+BASE_DIR = os.environ.get("BRAIN_BASE_DIR", ".")
+brain = BrainController(base_dir=BASE_DIR)
 
 @app.on_event("startup")
 async def startup_event():
@@ -213,6 +218,10 @@ async def pay_for_project(project_id: str, user=Depends(get_current_user)):
     return {"message": f"Payment successful for project {project_id}. Final export unlocked."}
 
 from fastapi.responses import FileResponse
+
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/outputs", StaticFiles(directory=brain.outputs_dir), name="outputs")
 
 @app.get("/download/{filename}")
 async def download_file(filename: str):
