@@ -105,4 +105,5 @@
   - max duration
   - max resolution
 - Signed URLs for output downloads
+Retention details: see `docs/architecture/RETENTION_POLICY.md`
 
